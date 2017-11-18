@@ -1,11 +1,31 @@
 best <- function(state, outcome) {
     ## Read outcome data
-    data <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
-    
-    ## Check that state and outcome are valid
-    if (!state %in% data$State) {
-        stop("Invalid state")
-    }
+    data <- read.csv("outcome-of-care-measures.csv", colClasses = "character", na.strings="Not Available", stringsAsFactors=FALSE)
 
-    ## Return hospital name in that state with lowest 30-day death rate
+    ## Create outcome to column convertion
+    outcomes <- c("heart attack"=11, "heart failure"=17, "pneumonia"=23)
+
+    ## Check correct state-input
+    if (!state %in% data$State) {
+        stop("invalid state")
+    }
+    
+    ## Check correct outcome-input
+    if (is.na(outcomes[outcome])) {
+        stop("invalid outcome")
+    }
+    
+    ## Subset data by State
+    statesData <- data[data$State == state,]
+
+    ## Remove NA's
+    statesData <- statesData[!is.na(statesData[,outcomes[outcome]]),]
+    ## Convert to numeric, so we can sort the numbers correctly
+    statesData[,outcomes[outcome]] <- as.numeric(statesData[,outcomes[outcome]])
+    
+    ## Sort data by outcome
+    statesData <- statesData[order(statesData[outcomes[outcome]], statesData$Hospital.Name),]
+
+    ## Return first Hospital
+    statesData[1,"Hospital.Name"]
 }
